@@ -77,7 +77,14 @@ export function subscribeFeed(count: number, cb: (posts: Post[]) => void, onErro
     orderBy("createdAt", "desc"),
     limit(count)
   );
-  return onSnapshot(q, (snap) => cb(snap.docs.map(toPost)), onError);
+  return onSnapshot(
+    q,
+    (snap) => cb(snap.docs.map(toPost)),
+    (e) => {
+      console.error(e);
+      onError();
+    }
+  );
 }
 
 export function subscribeUserPosts(
@@ -86,17 +93,19 @@ export function subscribeUserPosts(
   cb: (posts: Post[]) => void,
   onError: () => void
 ) {
+  // Equality-only filters need no composite index, so sorting happens here instead.
   const base = collection(db, "posts");
   const q = includePrivate
-    ? query(base, where("uid", "==", uid), orderBy("createdAt", "desc"), limit(120))
-    : query(
-        base,
-        where("uid", "==", uid),
-        where("visibility", "==", "public"),
-        orderBy("createdAt", "desc"),
-        limit(120)
-      );
-  return onSnapshot(q, (snap) => cb(snap.docs.map(toPost)), onError);
+    ? query(base, where("uid", "==", uid), limit(300))
+    : query(base, where("uid", "==", uid), where("visibility", "==", "public"), limit(300));
+  return onSnapshot(
+    q,
+    (snap) => cb(snap.docs.map(toPost).sort((a, b) => b.createdAt - a.createdAt)),
+    (e) => {
+      console.error(e);
+      onError();
+    }
+  );
 }
 
 const mediaCache = new Map<string, Promise<Media>>();

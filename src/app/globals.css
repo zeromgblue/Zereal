@@ -1,0 +1,100 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-bg: #12141c;
+  --color-card: #1a1d29;
+  --color-raise: #242838;
+  --color-line: #ffffff14;
+  --color-ink: #eef0f6;
+  --color-mute: #8d93a8;
+  --color-sky: #9dc1ff;
+  --color-skydeep: #6f9df5;
+  --color-blush: #ffb3c4;
+  --font-sans: var(--font-mitr), system-ui, sans-serif;
+}
+
+html,
+body {
+  background: #12141c;
+  color: #eef0f6;
+  overscroll-behavior-y: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: var(--font-mitr), system-ui, sans-serif;
+  font-weight: 300;
+}
+
+button {
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+input,
+textarea {
+  font-size: 16px;
+  outline: none;
+}
+
+img {
+  -webkit-user-drag: none;
+  -webkit-touch-callout: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  scrollbar-width: none;
+}
+
+.pb-safe {
+  padding-bottom: max(env(safe-area-inset-bottom), 12px);
+}
+.pt-safe {
+  padding-top: max(env(safe-area-inset-top), 12px);
+}
+
+.logo-shadow {
+  filter: drop-shadow(0 2px 6px rgb(0 0 0 / 0.35));
+}
+
+@keyframes shimmer {
+  from {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 0.9;
+  }
+  to {
+    opacity: 0.45;
+  }
+}
+.skeleton {
+  background: #1a1d29;
+  animation: shimmer 1.6s ease-in-out infinite;
+}
+
+@keyframes floaty {
+  from {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+.floaty {
+  animation: floaty 4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton,
+  .floaty {
+    animation: none;
+  }
+}

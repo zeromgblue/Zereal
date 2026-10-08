@@ -1,0 +1,53 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+    function owns(data) {
+      return signedIn() && data.uid == request.auth.uid;
+    }
+    function canSee(data) {
+      return signedIn() && (data.visibility == 'public' || data.uid == request.auth.uid);
+    }
+
+    match /users/{uid} {
+      allow read: if signedIn();
+      allow create, update: if signedIn()
+        && request.auth.uid == uid
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() <= 24;
+    }
+
+    match /posts/{postId} {
+      allow read: if canSee(resource.data);
+      allow create: if owns(request.resource.data)
+        && request.resource.data.visibility in ['public', 'private'];
+      // Owners edit their post; everyone else may only touch likes and the comment counter.
+      allow update: if (owns(resource.data) && request.resource.data.uid == resource.data.uid)
+        || (canSee(resource.data)
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes', 'commentCount']));
+      allow delete: if owns(resource.data);
+
+      match /comments/{commentId} {
+        allow read: if signedIn();
+        allow create: if owns(request.resource.data)
+          && request.resource.data.text is string
+          && request.resource.data.text.size() > 0
+          && request.resource.data.text.size() <= 300;
+        allow delete: if owns(resource.data)
+          || owns(get(/databases/$(database)/documents/posts/$(postId)).data);
+      }
+    }
+
+    // Full-size photos, one document per post.
+    match /media/{postId} {
+      allow read: if canSee(resource.data);
+      allow create: if owns(request.resource.data);
+      allow update: if owns(resource.data) && request.resource.data.uid == resource.data.uid;
+      allow delete: if owns(resource.data);
+    }
+  }
+}
